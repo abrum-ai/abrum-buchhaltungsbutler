@@ -2,7 +2,7 @@
   "appId": "abrum.buchhaltungsbutler",
   "package": "@abrum/buchhaltungsbutler-app",
   "title": "BuchhaltungsButler",
-  "icon": "landmark",
+  "icon": "receipt",
   "description": "Direkte BuchhaltungsButler-Anbindung über station-js mit Secrets- und Run-Artefakt-Unterstützung.",
   "kind": "web",
   "appVersion": "0.1.0",

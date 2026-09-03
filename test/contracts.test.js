@@ -5,6 +5,8 @@ import test from "node:test";
 const root = new URL("../", import.meta.url);
 const manifest = JSON.parse(await readFile(new URL("../abrum.app.json", import.meta.url), "utf8"));
 const backend = await readFile(new URL("../backend/buchhaltungsbutler.station.js", import.meta.url), "utf8");
+const app = await readFile(new URL("../src/App.tsx", import.meta.url), "utf8");
+const styles = await readFile(new URL("../src/styles.css", import.meta.url), "utf8");
 
 test("manifest imports Secrets and declares one server-filled credential", () => {
   assert.ok(manifest.companions.includes("abrum.secrets"));
@@ -23,4 +25,12 @@ test("upload uses the private Run artifact schema and download returns an embedd
 
 test("network policy is restricted to BuchhaltungsButler TLS", () => {
   assert.deepEqual(manifest.network.allow, ["app.buchhaltungsbutler.de:443"]);
+});
+
+test("UI uses the ABRUM component library and host navigation contract", () => {
+  assert.match(app, /useAbrumGlobalNavigation/);
+  assert.match(app, /from "@abrum\/react\/ui"/);
+  assert.match(app, /<Tabs/);
+  assert.match(styles, /@import "@abrum\/react\/tailwind\.css"/);
+  assert.doesNotMatch(styles, /radial-gradient|box-shadow:\s*0 1[26]px/);
 });
