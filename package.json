@@ -1,0 +1,35 @@
+{
+  "name": "@abrum/buchhaltungsbutler-app",
+  "version": "0.1.0",
+  "description": "Standalone ABRUM station-js app for BuchhaltungsButler with Secrets and file artifact support.",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abrum-ai/abrum-buchhaltungsbutler.git"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5173",
+    "build": "tsc --noEmit && vite build",
+    "test": "node --test && node scripts/check-no-legacy-name.mjs"
+  },
+  "dependencies": {
+    "@abrum/react": "0.1.1",
+    "@abrum/runtime": "0.1.1",
+    "@abrum/wasm": "0.1.1",
+    "@abrum/web-runtime": "0.1.1",
+    "@vitejs/plugin-react": "^5.1.1",
+    "vite": "^7.2.6",
+    "typescript": "^5.9.3",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3"
+  }
+}

@@ -1,0 +1,220 @@
+{
+  "appId": "abrum.buchhaltungsbutler",
+  "package": "@abrum/buchhaltungsbutler-app",
+  "title": "BuchhaltungsButler",
+  "icon": "landmark",
+  "description": "Direkte BuchhaltungsButler-Anbindung über station-js mit Secrets- und Run-Artefakt-Unterstützung.",
+  "kind": "web",
+  "appVersion": "0.1.0",
+  "executionLevel": "effect-declaration",
+  "build": {
+    "command": "vite build",
+    "dist": "dist",
+    "entrypoint": "index.html"
+  },
+  "install": {
+    "grant": "room",
+    "grantedRights": ["read", "write"],
+    "config": {
+      "sidebar": {
+        "createRoom": {
+          "label": "BuchhaltungsButler verbinden",
+          "icon": "plus",
+          "defaultAgentOfferId": "buchhaltungsbutler.read"
+        }
+      }
+    }
+  },
+  "imports": [
+    {
+      "appId": "abrum.secrets",
+      "package": "@abrum/secrets-web",
+      "version": "^0.1.4",
+      "functions": [{ "id": "listSecrets" }],
+      "surfaces": [
+        { "id": "main", "kind": "web", "label": "Secrets", "entrypoint": "/", "placements": ["app"] },
+        {
+          "id": "credential-connection",
+          "kind": "web",
+          "label": "BuchhaltungsButler-Zugang speichern",
+          "entrypoint": "/surfaces/credential-connection",
+          "placements": ["modal"],
+          "input": {
+            "type": "object",
+            "properties": {
+              "requiredByAppId": { "type": "string" },
+              "secretId": { "type": "string" },
+              "username": { "type": "string" }
+            },
+            "required": ["requiredByAppId", "secretId"],
+            "additionalProperties": false
+          },
+          "defaultSize": { "width": 520, "height": 460 }
+        }
+      ],
+      "required": true
+    }
+  ],
+  "companions": ["abrum.secrets"],
+  "requiredSecrets": [
+    {
+      "id": "buchhaltungsbutler.credentials",
+      "kind": "buchhaltungsbutler.api-credentials",
+      "fillAs": "credentials",
+      "access": "use",
+      "portable": true,
+      "protection": {
+        "consume": "none",
+        "reveal": "local_presence",
+        "mutate": "local_presence",
+        "delete": "local_presence",
+        "export": "local_presence"
+      },
+      "reason": "JSON mit apiClient, apiSecret und apiKey für die BuchhaltungsButler API. Der Wert wird nur serverseitig in station-js eingesetzt.",
+      "functions": [
+        "testConnection", "listReceipts", "downloadReceipt", "uploadReceipt",
+        "listTransactions", "listPostings", "listAccounts", "listDebtors",
+        "listCreditors", "listPostingAccounts", "listCostLocations"
+      ]
+    }
+  ],
+  "features": [],
+  "functions": [
+    {
+      "id": "testConnection",
+      "description": "Prüft den versiegelten BuchhaltungsButler-Zugang durch Abruf der Konten.",
+      "input": { "type": "object", "properties": {}, "additionalProperties": false },
+      "runtime": "station-js"
+    },
+    {
+      "id": "listReceipts",
+      "description": "Liest Belege. payload entspricht POST /receipts/get; list_direction ist inbound oder outbound.",
+      "input": {
+        "type": "object",
+        "properties": { "payload": { "type": "object", "additionalProperties": true } },
+        "required": ["payload"],
+        "additionalProperties": false
+      },
+      "runtime": "station-js"
+    },
+    {
+      "id": "downloadReceipt",
+      "description": "Lädt eine Belegdatei und gibt sie als privates Run-Artefakt zurück. Sie kann anschließend mit Files gespeichert werden.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "idByCustomer": { "type": ["string", "integer"] },
+          "mimeType": { "type": "string", "default": "application/pdf" },
+          "payload": { "type": "object", "additionalProperties": true }
+        },
+        "required": ["idByCustomer"],
+        "additionalProperties": false
+      },
+      "runtime": "station-js"
+    },
+    {
+      "id": "uploadReceipt",
+      "description": "Lädt ein angehängtes Run-Artefakt als Beleg hoch. Das Modell sieht nur artifactRef; die Station fügt Bytes und Metadaten privat ein.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "artifactRef": { "type": "string", "format": "abrum-run-artifact" },
+          "fileBase64": { "type": "string" },
+          "fileName": { "type": "string" },
+          "mimeType": { "type": "string" },
+          "fileSize": { "type": "integer", "minimum": 1, "maximum": 26214400 },
+          "receiptType": {
+            "type": "string",
+            "enum": ["invoice inbound", "invoice outbound", "credit inbound", "credit outbound"]
+          },
+          "payload": { "type": "object", "additionalProperties": true }
+        },
+        "required": ["artifactRef", "fileBase64", "fileName", "mimeType", "fileSize", "receiptType"],
+        "additionalProperties": false
+      },
+      "runtime": "station-js"
+    },
+    {
+      "id": "listTransactions",
+      "description": "Liest Transaktionen über POST /transactions/get.",
+      "input": { "type": "object", "properties": { "payload": { "type": "object", "additionalProperties": true } }, "additionalProperties": false },
+      "runtime": "station-js"
+    },
+    {
+      "id": "listPostings",
+      "description": "Liest Buchungen über POST /postings/get; date_from und date_to gehören in payload.",
+      "input": { "type": "object", "properties": { "payload": { "type": "object", "additionalProperties": true } }, "required": ["payload"], "additionalProperties": false },
+      "runtime": "station-js"
+    },
+    {
+      "id": "listAccounts",
+      "description": "Liest Zahlungskonten über POST /accounts/get.",
+      "input": { "type": "object", "properties": {}, "additionalProperties": false },
+      "runtime": "station-js"
+    },
+    {
+      "id": "listDebtors",
+      "description": "Liest Debitoren über POST /settings/get/debtors.",
+      "input": { "type": "object", "properties": { "payload": { "type": "object", "additionalProperties": true } }, "additionalProperties": false },
+      "runtime": "station-js"
+    },
+    {
+      "id": "listCreditors",
+      "description": "Liest Kreditoren über POST /settings/get/creditors.",
+      "input": { "type": "object", "properties": { "payload": { "type": "object", "additionalProperties": true } }, "additionalProperties": false },
+      "runtime": "station-js"
+    },
+    {
+      "id": "listPostingAccounts",
+      "description": "Liest Sachkonten über POST /settings/get/postingaccounts.",
+      "input": { "type": "object", "properties": { "payload": { "type": "object", "additionalProperties": true } }, "additionalProperties": false },
+      "runtime": "station-js"
+    },
+    {
+      "id": "listCostLocations",
+      "description": "Liest Kostenstellen über POST /cost-locations/get.",
+      "input": { "type": "object", "properties": { "payload": { "type": "object", "additionalProperties": true } }, "additionalProperties": false },
+      "runtime": "station-js"
+    }
+  ],
+  "capabilityOffers": [
+    {
+      "id": "buchhaltungsbutler.read",
+      "title": "Buchhaltungsdaten lesen",
+      "description": "Konten, Belege, Transaktionen, Buchungen und Stammdaten lesen sowie Belegdateien herunterladen.",
+      "functions": ["testConnection", "listReceipts", "downloadReceipt", "listTransactions", "listPostings", "listAccounts", "listDebtors", "listCreditors", "listPostingAccounts", "listCostLocations"],
+      "modes": ["on_behalf_of_caller", "delegated_service"],
+      "defaultMode": "on_behalf_of_caller",
+      "risk": "low",
+      "resultPolicies": ["agent_room"],
+      "defaultResultPolicy": "agent_room"
+    },
+    {
+      "id": "buchhaltungsbutler.upload",
+      "title": "Belege lesen und hochladen",
+      "description": "Lesefunktionen plus Upload eines ausdrücklich angehängten Run-Artefakts als Beleg.",
+      "functions": ["testConnection", "listReceipts", "downloadReceipt", "uploadReceipt", "listTransactions", "listPostings", "listAccounts", "listDebtors", "listCreditors", "listPostingAccounts", "listCostLocations"],
+      "modes": ["on_behalf_of_caller", "delegated_service"],
+      "defaultMode": "on_behalf_of_caller",
+      "risk": "medium",
+      "resultPolicies": ["agent_room"],
+      "defaultResultPolicy": "agent_room"
+    }
+  ],
+  "surfaces": [
+    { "id": "main", "kind": "web", "label": "BuchhaltungsButler", "entrypoint": "/", "placements": ["app"] }
+  ],
+  "background": null,
+  "backends": {
+    "js": {
+      "kind": "station-js",
+      "engine": "node-vm",
+      "entrypoint": "backend/buchhaltungsbutler.station.js"
+    }
+  },
+  "network": {
+    "allowDns": true,
+    "allowOutboundTcp": true,
+    "allow": ["app.buchhaltungsbutler.de:443"]
+  }
+}
